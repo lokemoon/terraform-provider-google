@@ -101,7 +101,7 @@ Format: projects/<Project ID>/locations/<Location ID>/agents/<Agent ID>/flows/<F
 													Type:        schema.TypeList,
 													Optional:    true,
 													Description: `The text response message.`,
-													MaxItems:    1,
+													MaxItems:    10,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"text": {
