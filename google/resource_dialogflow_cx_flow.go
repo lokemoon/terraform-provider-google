@@ -112,6 +112,14 @@ Format: projects/<Project ID>/locations/<Location ID>/agents/<Agent ID>/flows/<F
 																	Type: schema.TypeString,
 																},
 															},
+															"text2": {
+																Type:        schema.TypeList,
+																Optional:    true,
+																Description: `A collection of text responses.`,
+																Elem: &schema.Schema{
+																	Type: schema.TypeString,
+																},
+															},
 															"allow_playback_interruption": {
 																Type:        schema.TypeBool,
 																Computed:    true,
