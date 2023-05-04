@@ -85,7 +85,7 @@ resource "google_dialogflow_cx_flow" "basic_flow" {
 			    return_partial_responses = false
 				messages {
 					text {
-						text  = ["I didn't get that. Can you say it again?"]
+						text2  = ["I didn't get that. Can you say it again?"]
 					}
 				}
 		    }
