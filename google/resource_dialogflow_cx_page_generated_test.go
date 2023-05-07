@@ -102,6 +102,10 @@ resource "google_dialogflow_cx_page" "basic_page" {
     transition_routes {
 		condition = "$page.params.status = 'FINAL'"
 		trigger_fulfillment {
+			set_parameter_actions {
+				parameter = "111"
+				value = "222"
+			}
 			messages {
 				text {
 					text = ["information completed, navigating to page 2"]

@@ -147,6 +147,25 @@ var messagesType = &schema.Schema{
 		},
 	},
 }
+var setParameterActionsType = &schema.Schema{
+	Type:        schema.TypeList,
+	Optional:    true,
+	Description: `Set Parameters`,
+	Elem: &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"parameter": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: `The tag used by the webhook to identify which fulfillment is being called. This field is required if webhook is specified.`,
+			},
+			"value": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: `The tag used by the webhook to identify which fulfillment is being called. This field is required if webhook is specified.`,
+			},
+		},
+	},
+}
 var fulfillmentType = &schema.Schema{
 	Type:        schema.TypeList,
 	Optional:    true,
@@ -154,7 +173,8 @@ var fulfillmentType = &schema.Schema{
 	MaxItems:    1,
 	Elem: &schema.Resource{
 		Schema: map[string]*schema.Schema{
-			"messages": messagesType,
+			"messages":              messagesType,
+			"set_parameter_actions": setParameterActionsType,
 			"return_partial_responses": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -185,6 +205,7 @@ func flattenDialogflowCXFulfillment(v interface{}, d *schema.ResourceData, confi
 	transformed := make(map[string]interface{})
 	transformed["messages"] =
 		flattenDialogflowCXFulfillmentMessages(original["messages"], d, config)
+	transformed["set_parameter_actions"] = original["setParameterActions"]
 	transformed["webhook"] = original["webhook"]
 	// flattenDialogflowCXFulfillmentWebhook(original["webhook"], d, config)
 	transformed["return_partial_responses"] = original["return_partial_responses"]
@@ -311,7 +332,10 @@ func expandDialogflowCXFulfillment(v interface{}, d TerraformResourceData, confi
 	} else if val := reflect.ValueOf(transformedMessages); val.IsValid() && !isEmptyValue(val) {
 		transformed["messages"] = transformedMessages
 	}
-
+	transformedSetParameterActions := original["set_parameter_actions"]
+	if val := reflect.ValueOf(transformedSetParameterActions); val.IsValid() && !isEmptyValue(val) {
+		transformed["setParameterActions"] = transformedSetParameterActions
+	}
 	transformedWebhook, err := expandDialogflowCXFulfillmentWebhook(original["webhook"], d, config)
 	if err != nil {
 		return nil, err
