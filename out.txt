@@ -1,0 +1,1 @@
+ go build -o ~/.terraform.d/plugins/terraform.local/lokemoon/google/0.0.3/darwin_amd64/terraform-provider-google_v0.0.3 main.go
