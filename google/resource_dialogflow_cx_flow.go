@@ -84,71 +84,7 @@ Format: projects/<Project ID>/locations/<Location ID>/agents/<Agent ID>/flows/<F
 							Description: `The target page to transition to.
 Format: projects/<Project ID>/locations/<Location ID>/agents/<Agent ID>/flows/<Flow ID>/pages/<Page ID>.`,
 						},
-						"trigger_fulfillment": {
-							Type:        schema.TypeList,
-							Optional:    true,
-							Description: `The fulfillment to call when the event occurs. Handling webhook errors with a fulfillment enabled with webhook could cause infinite loop. It is invalid to specify such fulfillment for a handler handling webhooks.`,
-							MaxItems:    1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"messages": {
-										Type:        schema.TypeList,
-										Optional:    true,
-										Description: `The list of rich message responses to present to the user.`,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"text": {
-													Type:        schema.TypeList,
-													Optional:    true,
-													Description: `The text response message.`,
-													MaxItems:    10,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"text": {
-																Type:        schema.TypeList,
-																Optional:    true,
-																Description: `A collection of text responses.`,
-																Elem: &schema.Schema{
-																	Type: schema.TypeString,
-																},
-															},
-															"text2": {
-																Type:        schema.TypeList,
-																Optional:    true,
-																Description: `A collection of text responses.`,
-																Elem: &schema.Schema{
-																	Type: schema.TypeString,
-																},
-															},
-															"allow_playback_interruption": {
-																Type:        schema.TypeBool,
-																Computed:    true,
-																Description: `Whether the playback of this message can be interrupted by the end user's speech and the client can then starts the next Dialogflow request.`,
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-									"return_partial_responses": {
-										Type:        schema.TypeBool,
-										Optional:    true,
-										Description: `Whether Dialogflow should return currently queued fulfillment response messages in streaming APIs. If a webhook is specified, it happens before Dialogflow invokes webhook. Warning: 1) This flag only affects streaming API. Responses are still queued and returned once in non-streaming API. 2) The flag can be enabled in any fulfillment but only the first 3 partial responses will be returned. You may only want to apply it to fulfillments that have slow webhooks.`,
-									},
-									"tag": {
-										Type:        schema.TypeString,
-										Optional:    true,
-										Description: `The tag used by the webhook to identify which fulfillment is being called. This field is required if webhook is specified.`,
-									},
-									"webhook": {
-										Type:        schema.TypeString,
-										Optional:    true,
-										Description: `The webhook to call. Format: projects/<Project ID>/locations/<Location ID>/agents/<Agent ID>/webhooks/<Webhook ID>.`,
-									},
-								},
-							},
-						},
+						"trigger_fulfillment": fulfillmentType,
 						"name": {
 							Type:        schema.TypeString,
 							Computed:    true,
@@ -255,63 +191,7 @@ Format: projects/<Project ID>/locations/<Location ID>/agents/<Agent ID>/flows/<F
 							Description: `The target page to transition to.
 Format: projects/<Project ID>/locations/<Location ID>/agents/<Agent ID>/flows/<Flow ID>/pages/<Page ID>.`,
 						},
-						"trigger_fulfillment": {
-							Type:        schema.TypeList,
-							Optional:    true,
-							Description: `The fulfillment to call when the condition is satisfied. At least one of triggerFulfillment and target must be specified. When both are defined, triggerFulfillment is executed first.`,
-							MaxItems:    1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"messages": {
-										Type:        schema.TypeList,
-										Optional:    true,
-										Description: `The list of rich message responses to present to the user.`,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"text": {
-													Type:        schema.TypeList,
-													Optional:    true,
-													Description: `The text response message.`,
-													MaxItems:    1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"text": {
-																Type:        schema.TypeList,
-																Optional:    true,
-																Description: `A collection of text responses.`,
-																Elem: &schema.Schema{
-																	Type: schema.TypeString,
-																},
-															},
-															"allow_playback_interruption": {
-																Type:        schema.TypeBool,
-																Computed:    true,
-																Description: `Whether the playback of this message can be interrupted by the end user's speech and the client can then starts the next Dialogflow request.`,
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-									"return_partial_responses": {
-										Type:        schema.TypeBool,
-										Optional:    true,
-										Description: `Whether Dialogflow should return currently queued fulfillment response messages in streaming APIs. If a webhook is specified, it happens before Dialogflow invokes webhook. Warning: 1) This flag only affects streaming API. Responses are still queued and returned once in non-streaming API. 2) The flag can be enabled in any fulfillment but only the first 3 partial responses will be returned. You may only want to apply it to fulfillments that have slow webhooks.`,
-									},
-									"tag": {
-										Type:        schema.TypeString,
-										Optional:    true,
-										Description: `The tag used by the webhook to identify which fulfillment is being called. This field is required if webhook is specified.`,
-									},
-									"webhook": {
-										Type:        schema.TypeString,
-										Optional:    true,
-										Description: `The webhook to call. Format: projects/<Project ID>/locations/<Location ID>/agents/<Agent ID>/webhooks/<Webhook ID>.`,
-									},
-								},
-							},
-						},
+						"trigger_fulfillment": fulfillmentType,
 						"name": {
 							Type:        schema.TypeString,
 							Computed:    true,
@@ -409,6 +289,19 @@ func resourceDialogflowCXFlowCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	url = strings.Replace(url, "-dialogflow", fmt.Sprintf("%s-dialogflow", location), 1)
+	// fmt.Println("POST")
+	// fmt.Println(url)
+	// fmt.Printf("[DEBUG] Creating new Flow: %#v", obj)
+	// fmt.Println("")
+	// jsonBytes, err := json.Marshal(obj)
+	// if err != nil {
+	// 	fmt.Println("Error:", err)
+	// }
+	// if err == nil {
+	// 	jsonString := string(jsonBytes)
+	// 	fmt.Println(jsonString)
+	// }
+
 	res, err := transport_tpg.SendRequestWithTimeout(config, "POST", billingProject, url, userAgent, obj, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		return fmt.Errorf("Error creating Flow: %s", err)
@@ -709,7 +602,7 @@ func flattenDialogflowCXFlowTransitionRoutes(v interface{}, d *schema.ResourceDa
 			"name":                flattenDialogflowCXFlowTransitionRoutesName(original["name"], d, config),
 			"intent":              flattenDialogflowCXFlowTransitionRoutesIntent(original["intent"], d, config),
 			"condition":           flattenDialogflowCXFlowTransitionRoutesCondition(original["condition"], d, config),
-			"trigger_fulfillment": flattenDialogflowCXFlowTransitionRoutesTriggerFulfillment(original["triggerFulfillment"], d, config),
+			"trigger_fulfillment": flattenDialogflowCXFulfillment(original["triggerFulfillment"], d, config),
 			"target_page":         flattenDialogflowCXFlowTransitionRoutesTargetPage(original["targetPage"], d, config),
 			"target_flow":         flattenDialogflowCXFlowTransitionRoutesTargetFlow(original["targetFlow"], d, config),
 		})
@@ -823,7 +716,7 @@ func flattenDialogflowCXFlowEventHandlers(v interface{}, d *schema.ResourceData,
 		transformed = append(transformed, map[string]interface{}{
 			"name":                flattenDialogflowCXFlowEventHandlersName(original["name"], d, config),
 			"event":               flattenDialogflowCXFlowEventHandlersEvent(original["event"], d, config),
-			"trigger_fulfillment": flattenDialogflowCXFlowEventHandlersTriggerFulfillment(original["triggerFulfillment"], d, config),
+			"trigger_fulfillment": flattenDialogflowCXFulfillment(original["triggerFulfillment"], d, config),
 			"target_page":         flattenDialogflowCXFlowEventHandlersTargetPage(original["targetPage"], d, config),
 			"target_flow":         flattenDialogflowCXFlowEventHandlersTargetFlow(original["targetFlow"], d, config),
 		})
@@ -865,14 +758,26 @@ func flattenDialogflowCXFlowEventHandlersTriggerFulfillmentMessages(v interface{
 	transformed := make([]interface{}, 0, len(l))
 	for _, raw := range l {
 		original := raw.(map[string]interface{})
+
 		if len(original) < 1 {
 			// Do not include empty json objects coming back from the api
 			continue
 		}
-		transformed = append(transformed, map[string]interface{}{
-			"text": flattenDialogflowCXFlowEventHandlersTriggerFulfillmentMessagesText(original["text"], d, config),
-		})
+		var key = "text"
+
+		if original[key] != nil {
+			transformed = append(transformed, map[string]interface{}{
+				"text": flattenDialogflowCXFlowEventHandlersTriggerFulfillmentMessagesText(original[key], d, config),
+			})
+		}
+		key = "payload"
+		if original[key] != nil {
+			transformed = append(transformed, map[string]interface{}{
+				key: flattenDialogflowCXFlowEventHandlersTriggerFulfillmentMessagesPayload(original[key], d, config),
+			})
+		}
 	}
+
 	return transformed
 }
 func flattenDialogflowCXFlowEventHandlersTriggerFulfillmentMessagesText(v interface{}, d *schema.ResourceData, config *transport_tpg.Config) interface{} {
@@ -888,6 +793,27 @@ func flattenDialogflowCXFlowEventHandlersTriggerFulfillmentMessagesText(v interf
 		flattenDialogflowCXFlowEventHandlersTriggerFulfillmentMessagesTextText(original["text"], d, config)
 	transformed["allow_playback_interruption"] =
 		flattenDialogflowCXFlowEventHandlersTriggerFulfillmentMessagesTextAllowPlaybackInterruption(original["allowPlaybackInterruption"], d, config)
+	return []interface{}{transformed}
+}
+func flattenDialogflowCXFlowEventHandlersTriggerFulfillmentMessagesPayload(v interface{}, d *schema.ResourceData, config *transport_tpg.Config) interface{} {
+	if v == nil {
+		return nil
+	}
+	original := v.(map[string]interface{})
+	if len(original) == 0 {
+		return nil
+	}
+	transformed := make(map[string]interface{})
+	originalText := original["text"]
+	if originalText != nil {
+		transformed["text"] = originalText
+	}
+
+	originalImage := original["image"]
+	if originalImage != nil {
+		transformed["image"] = originalImage
+	}
+
 	return []interface{}{transformed}
 }
 func flattenDialogflowCXFlowEventHandlersTriggerFulfillmentMessagesTextText(v interface{}, d *schema.ResourceData, config *transport_tpg.Config) interface{} {
@@ -994,7 +920,7 @@ func expandDialogflowCXFlowTransitionRoutes(v interface{}, d TerraformResourceDa
 			transformed["condition"] = transformedCondition
 		}
 
-		transformedTriggerFulfillment, err := expandDialogflowCXFlowTransitionRoutesTriggerFulfillment(original["trigger_fulfillment"], d, config)
+		transformedTriggerFulfillment, err := expandDialogflowCXFulfillment(original["trigger_fulfillment"], d, config)
 		if err != nil {
 			return nil, err
 		} else if val := reflect.ValueOf(transformedTriggerFulfillment); val.IsValid() && !isEmptyValue(val) {
@@ -1032,114 +958,6 @@ func expandDialogflowCXFlowTransitionRoutesCondition(v interface{}, d TerraformR
 	return v, nil
 }
 
-func expandDialogflowCXFlowTransitionRoutesTriggerFulfillment(v interface{}, d TerraformResourceData, config *transport_tpg.Config) (interface{}, error) {
-	l := v.([]interface{})
-	if len(l) == 0 || l[0] == nil {
-		return nil, nil
-	}
-	raw := l[0]
-	original := raw.(map[string]interface{})
-	transformed := make(map[string]interface{})
-
-	transformedMessages, err := expandDialogflowCXFlowTransitionRoutesTriggerFulfillmentMessages(original["messages"], d, config)
-	if err != nil {
-		return nil, err
-	} else if val := reflect.ValueOf(transformedMessages); val.IsValid() && !isEmptyValue(val) {
-		transformed["messages"] = transformedMessages
-	}
-
-	transformedWebhook, err := expandDialogflowCXFlowTransitionRoutesTriggerFulfillmentWebhook(original["webhook"], d, config)
-	if err != nil {
-		return nil, err
-	} else if val := reflect.ValueOf(transformedWebhook); val.IsValid() && !isEmptyValue(val) {
-		transformed["webhook"] = transformedWebhook
-	}
-
-	transformedReturnPartialResponses, err := expandDialogflowCXFlowTransitionRoutesTriggerFulfillmentReturnPartialResponses(original["return_partial_responses"], d, config)
-	if err != nil {
-		return nil, err
-	} else if val := reflect.ValueOf(transformedReturnPartialResponses); val.IsValid() && !isEmptyValue(val) {
-		transformed["returnPartialResponses"] = transformedReturnPartialResponses
-	}
-
-	transformedTag, err := expandDialogflowCXFlowTransitionRoutesTriggerFulfillmentTag(original["tag"], d, config)
-	if err != nil {
-		return nil, err
-	} else if val := reflect.ValueOf(transformedTag); val.IsValid() && !isEmptyValue(val) {
-		transformed["tag"] = transformedTag
-	}
-
-	return transformed, nil
-}
-
-func expandDialogflowCXFlowTransitionRoutesTriggerFulfillmentMessages(v interface{}, d TerraformResourceData, config *transport_tpg.Config) (interface{}, error) {
-	l := v.([]interface{})
-	req := make([]interface{}, 0, len(l))
-	for _, raw := range l {
-		if raw == nil {
-			continue
-		}
-		original := raw.(map[string]interface{})
-		transformed := make(map[string]interface{})
-
-		transformedText, err := expandDialogflowCXFlowTransitionRoutesTriggerFulfillmentMessagesText(original["text"], d, config)
-		if err != nil {
-			return nil, err
-		} else if val := reflect.ValueOf(transformedText); val.IsValid() && !isEmptyValue(val) {
-			transformed["text"] = transformedText
-		}
-
-		req = append(req, transformed)
-	}
-	return req, nil
-}
-
-func expandDialogflowCXFlowTransitionRoutesTriggerFulfillmentMessagesText(v interface{}, d TerraformResourceData, config *transport_tpg.Config) (interface{}, error) {
-	l := v.([]interface{})
-	if len(l) == 0 || l[0] == nil {
-		return nil, nil
-	}
-	raw := l[0]
-	original := raw.(map[string]interface{})
-	transformed := make(map[string]interface{})
-
-	transformedText, err := expandDialogflowCXFlowTransitionRoutesTriggerFulfillmentMessagesTextText(original["text"], d, config)
-	if err != nil {
-		return nil, err
-	} else if val := reflect.ValueOf(transformedText); val.IsValid() && !isEmptyValue(val) {
-		transformed["text"] = transformedText
-	}
-
-	transformedAllowPlaybackInterruption, err := expandDialogflowCXFlowTransitionRoutesTriggerFulfillmentMessagesTextAllowPlaybackInterruption(original["allow_playback_interruption"], d, config)
-	if err != nil {
-		return nil, err
-	} else if val := reflect.ValueOf(transformedAllowPlaybackInterruption); val.IsValid() && !isEmptyValue(val) {
-		transformed["allowPlaybackInterruption"] = transformedAllowPlaybackInterruption
-	}
-
-	return transformed, nil
-}
-
-func expandDialogflowCXFlowTransitionRoutesTriggerFulfillmentMessagesTextText(v interface{}, d TerraformResourceData, config *transport_tpg.Config) (interface{}, error) {
-	return v, nil
-}
-
-func expandDialogflowCXFlowTransitionRoutesTriggerFulfillmentMessagesTextAllowPlaybackInterruption(v interface{}, d TerraformResourceData, config *transport_tpg.Config) (interface{}, error) {
-	return v, nil
-}
-
-func expandDialogflowCXFlowTransitionRoutesTriggerFulfillmentWebhook(v interface{}, d TerraformResourceData, config *transport_tpg.Config) (interface{}, error) {
-	return v, nil
-}
-
-func expandDialogflowCXFlowTransitionRoutesTriggerFulfillmentReturnPartialResponses(v interface{}, d TerraformResourceData, config *transport_tpg.Config) (interface{}, error) {
-	return v, nil
-}
-
-func expandDialogflowCXFlowTransitionRoutesTriggerFulfillmentTag(v interface{}, d TerraformResourceData, config *transport_tpg.Config) (interface{}, error) {
-	return v, nil
-}
-
 func expandDialogflowCXFlowTransitionRoutesTargetPage(v interface{}, d TerraformResourceData, config *transport_tpg.Config) (interface{}, error) {
 	return v, nil
 }
@@ -1172,7 +990,7 @@ func expandDialogflowCXFlowEventHandlers(v interface{}, d TerraformResourceData,
 			transformed["event"] = transformedEvent
 		}
 
-		transformedTriggerFulfillment, err := expandDialogflowCXFlowEventHandlersTriggerFulfillment(original["trigger_fulfillment"], d, config)
+		transformedTriggerFulfillment, err := expandDialogflowCXFulfillment(original["trigger_fulfillment"], d, config)
 		if err != nil {
 			return nil, err
 		} else if val := reflect.ValueOf(transformedTriggerFulfillment); val.IsValid() && !isEmptyValue(val) {
@@ -1203,114 +1021,6 @@ func expandDialogflowCXFlowEventHandlersName(v interface{}, d TerraformResourceD
 }
 
 func expandDialogflowCXFlowEventHandlersEvent(v interface{}, d TerraformResourceData, config *transport_tpg.Config) (interface{}, error) {
-	return v, nil
-}
-
-func expandDialogflowCXFlowEventHandlersTriggerFulfillment(v interface{}, d TerraformResourceData, config *transport_tpg.Config) (interface{}, error) {
-	l := v.([]interface{})
-	if len(l) == 0 || l[0] == nil {
-		return nil, nil
-	}
-	raw := l[0]
-	original := raw.(map[string]interface{})
-	transformed := make(map[string]interface{})
-
-	transformedMessages, err := expandDialogflowCXFlowEventHandlersTriggerFulfillmentMessages(original["messages"], d, config)
-	if err != nil {
-		return nil, err
-	} else if val := reflect.ValueOf(transformedMessages); val.IsValid() && !isEmptyValue(val) {
-		transformed["messages"] = transformedMessages
-	}
-
-	transformedWebhook, err := expandDialogflowCXFlowEventHandlersTriggerFulfillmentWebhook(original["webhook"], d, config)
-	if err != nil {
-		return nil, err
-	} else if val := reflect.ValueOf(transformedWebhook); val.IsValid() && !isEmptyValue(val) {
-		transformed["webhook"] = transformedWebhook
-	}
-
-	transformedReturnPartialResponses, err := expandDialogflowCXFlowEventHandlersTriggerFulfillmentReturnPartialResponses(original["return_partial_responses"], d, config)
-	if err != nil {
-		return nil, err
-	} else if val := reflect.ValueOf(transformedReturnPartialResponses); val.IsValid() && !isEmptyValue(val) {
-		transformed["returnPartialResponses"] = transformedReturnPartialResponses
-	}
-
-	transformedTag, err := expandDialogflowCXFlowEventHandlersTriggerFulfillmentTag(original["tag"], d, config)
-	if err != nil {
-		return nil, err
-	} else if val := reflect.ValueOf(transformedTag); val.IsValid() && !isEmptyValue(val) {
-		transformed["tag"] = transformedTag
-	}
-
-	return transformed, nil
-}
-
-func expandDialogflowCXFlowEventHandlersTriggerFulfillmentMessages(v interface{}, d TerraformResourceData, config *transport_tpg.Config) (interface{}, error) {
-	l := v.([]interface{})
-	req := make([]interface{}, 0, len(l))
-	for _, raw := range l {
-		if raw == nil {
-			continue
-		}
-		original := raw.(map[string]interface{})
-		transformed := make(map[string]interface{})
-
-		transformedText, err := expandDialogflowCXFlowEventHandlersTriggerFulfillmentMessagesText(original["text"], d, config)
-		if err != nil {
-			return nil, err
-		} else if val := reflect.ValueOf(transformedText); val.IsValid() && !isEmptyValue(val) {
-			transformed["text"] = transformedText
-		}
-
-		req = append(req, transformed)
-	}
-	return req, nil
-}
-
-func expandDialogflowCXFlowEventHandlersTriggerFulfillmentMessagesText(v interface{}, d TerraformResourceData, config *transport_tpg.Config) (interface{}, error) {
-	l := v.([]interface{})
-	if len(l) == 0 || l[0] == nil {
-		return nil, nil
-	}
-	raw := l[0]
-	original := raw.(map[string]interface{})
-	transformed := make(map[string]interface{})
-
-	transformedText, err := expandDialogflowCXFlowEventHandlersTriggerFulfillmentMessagesTextText(original["text"], d, config)
-	if err != nil {
-		return nil, err
-	} else if val := reflect.ValueOf(transformedText); val.IsValid() && !isEmptyValue(val) {
-		transformed["text"] = transformedText
-	}
-
-	transformedAllowPlaybackInterruption, err := expandDialogflowCXFlowEventHandlersTriggerFulfillmentMessagesTextAllowPlaybackInterruption(original["allow_playback_interruption"], d, config)
-	if err != nil {
-		return nil, err
-	} else if val := reflect.ValueOf(transformedAllowPlaybackInterruption); val.IsValid() && !isEmptyValue(val) {
-		transformed["allowPlaybackInterruption"] = transformedAllowPlaybackInterruption
-	}
-
-	return transformed, nil
-}
-
-func expandDialogflowCXFlowEventHandlersTriggerFulfillmentMessagesTextText(v interface{}, d TerraformResourceData, config *transport_tpg.Config) (interface{}, error) {
-	return v, nil
-}
-
-func expandDialogflowCXFlowEventHandlersTriggerFulfillmentMessagesTextAllowPlaybackInterruption(v interface{}, d TerraformResourceData, config *transport_tpg.Config) (interface{}, error) {
-	return v, nil
-}
-
-func expandDialogflowCXFlowEventHandlersTriggerFulfillmentWebhook(v interface{}, d TerraformResourceData, config *transport_tpg.Config) (interface{}, error) {
-	return v, nil
-}
-
-func expandDialogflowCXFlowEventHandlersTriggerFulfillmentReturnPartialResponses(v interface{}, d TerraformResourceData, config *transport_tpg.Config) (interface{}, error) {
-	return v, nil
-}
-
-func expandDialogflowCXFlowEventHandlersTriggerFulfillmentTag(v interface{}, d TerraformResourceData, config *transport_tpg.Config) (interface{}, error) {
 	return v, nil
 }
 

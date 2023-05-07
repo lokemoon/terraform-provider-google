@@ -85,13 +85,28 @@ resource "google_dialogflow_cx_flow" "basic_flow" {
 			    return_partial_responses = false
 				messages {
 					text {
-						text2  = ["I didn't get that. Can you say it again?"]
+						text  = ["1. Sorry, could you say that again?","3. Sorry, could you say that again?"]
+					}					
+				}
+				messages {
+					text {
+						text  = ["2. Sorry, could you say that again?","4. Sorry, could you say that again?"]
+					}					
+				}	
+				messages {
+					payload {						
+						text  = ["1. Sorry, could you say that again?","3. Sorry, could you say that again?"]
+						image {
+						src = "hello"
+						alt = "how"
+						type= "jpg"
+						}
 					}
 				}
-		    }
-		}
+			}
+		 }
 
-		event_handlers {
+		 event_handlers {
 			event                    = "sys.no-match-default"
 			trigger_fulfillment {
 				 return_partial_responses = false
@@ -110,10 +125,10 @@ resource "google_dialogflow_cx_flow" "basic_flow" {
 				 messages {
 					 text {
 						 text  = ["One more time?"]
-					 }
-				 }
-			 }
-		 }
+					}
+				}
+		    }
+		}		
 } 
 `, context)
 }

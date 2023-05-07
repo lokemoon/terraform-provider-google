@@ -107,6 +107,42 @@ resource "google_dialogflow_cx_page" "basic_page" {
 					text = ["information completed, navigating to page 2"]
 				}
 			}
+			messages {
+				payload {						
+					text  = ["1. Sorry, could you say that again?","3. Sorry, could you say that again?"]
+					image {
+						src = "hello"
+						alt = "how"
+						type= "jpg"
+					}
+				}
+			}
+			messages {
+				payload {						
+					text  = ["1. Sorry, could you say that again?","3. Sorry, could you say that again?"]					
+				}
+			}
+			messages {
+				payload {						
+					text  = ["1. Sorry, could you say that again?","3. Sorry, could you say that again?"]
+					simple_list {
+						icon = "icc"
+						title = "icc"
+						event = "icc"
+					}
+					simple_list {
+						icon = "icc"
+						title = "icc"
+						event = "icc"
+					}
+					simple_list {
+						icon = "icc"
+						title = "icc"
+						event = "icc"
+					}
+				}
+
+			}
 		}
 		target_page = google_dialogflow_cx_page.my_page2.id
 	}
