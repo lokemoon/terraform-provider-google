@@ -332,8 +332,10 @@ func expandDialogflowCXFulfillment(v interface{}, d TerraformResourceData, confi
 	} else if val := reflect.ValueOf(transformedMessages); val.IsValid() && !isEmptyValue(val) {
 		transformed["messages"] = transformedMessages
 	}
-	transformedSetParameterActions := original["set_parameter_actions"]
-	if val := reflect.ValueOf(transformedSetParameterActions); val.IsValid() && !isEmptyValue(val) {
+	transformedSetParameterActions, err := expandDialogflowCXFulfillmentSetParameterActions(original["set_parameter_actions"], d, config)
+	if err != nil {
+		return nil, err
+	} else if val := reflect.ValueOf(transformedSetParameterActions); val.IsValid() && !isEmptyValue(val) {
 		transformed["setParameterActions"] = transformedSetParameterActions
 	}
 	transformedWebhook, err := expandDialogflowCXFulfillmentWebhook(original["webhook"], d, config)
@@ -417,6 +419,34 @@ func expandDialogflowCXFulfillmentMessagesPayload(v interface{}, d TerraformReso
 	expandDialogFlowCXValue(original, d, config, transformed, "list_suggestions")
 
 	return transformed, nil
+}
+func expandDialogflowCXFulfillmentSetParameterActions(v interface{}, d TerraformResourceData, config *transport_tpg.Config) (interface{}, error) {
+	l := v.([]interface{})
+	req := make([]interface{}, 0, len(l))
+	for _, raw := range l {
+		if raw == nil {
+			continue
+		}
+		original := raw.(map[string]interface{})
+		transformed := make(map[string]interface{})
+		var key = "parameter"
+		var originalValue = original[key]
+		if originalValue != nil {
+			if val := reflect.ValueOf(originalValue); val.IsValid() && !isEmptyValue(val) {
+				transformed[key] = originalValue
+			}
+		}
+
+		key = "value"
+		originalValue = original[key]
+		if originalValue != nil {
+			if val := reflect.ValueOf(originalValue); val.IsValid() && !isEmptyValue(val) {
+				transformed[key] = originalValue
+			}
+		}
+		req = append(req, transformed)
+	}
+	return req, nil
 }
 
 func expandDialogFlowCXValue(original map[string]interface{}, d TerraformResourceData, config *transport_tpg.Config, transformed map[string]interface{}, key string) {
