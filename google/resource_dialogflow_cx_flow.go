@@ -237,7 +237,7 @@ func resourceDialogflowCXFlowCreate(d *schema.ResourceData, meta interface{}) er
 	} else if v, ok := d.GetOkExists("transition_routes"); !isEmptyValue(reflect.ValueOf(transitionRoutesProp)) && (ok || !reflect.DeepEqual(v, transitionRoutesProp)) {
 		obj["transitionRoutes"] = transitionRoutesProp
 	}
-	eventHandlersProp, err := expandDialogflowCXFlowEventHandlers(d.Get("event_handlers"), d, config)
+	eventHandlersProp, err := expandDialogflowCXEventHandlers(d.Get("event_handlers"), d, config)
 	if err != nil {
 		return err
 	} else if v, ok := d.GetOkExists("event_handlers"); !isEmptyValue(reflect.ValueOf(eventHandlersProp)) && (ok || !reflect.DeepEqual(v, eventHandlersProp)) {
@@ -372,7 +372,7 @@ func resourceDialogflowCXFlowRead(d *schema.ResourceData, meta interface{}) erro
 	if err := d.Set("transition_routes", flattenDialogflowCXFlowTransitionRoutes(res["transitionRoutes"], d, config)); err != nil {
 		return fmt.Errorf("Error reading Flow: %s", err)
 	}
-	if err := d.Set("event_handlers", flattenDialogflowCXFlowEventHandlers(res["eventHandlers"], d, config)); err != nil {
+	if err := d.Set("event_handlers", flattenDialogflowCXEventHandlers(res["eventHandlers"], d, config)); err != nil {
 		return fmt.Errorf("Error reading Flow: %s", err)
 	}
 	if err := d.Set("transition_route_groups", flattenDialogflowCXFlowTransitionRouteGroups(res["transitionRouteGroups"], d, config)); err != nil {
@@ -416,7 +416,7 @@ func resourceDialogflowCXFlowUpdate(d *schema.ResourceData, meta interface{}) er
 	} else if v, ok := d.GetOkExists("transition_routes"); !isEmptyValue(reflect.ValueOf(v)) && (ok || !reflect.DeepEqual(v, transitionRoutesProp)) {
 		obj["transitionRoutes"] = transitionRoutesProp
 	}
-	eventHandlersProp, err := expandDialogflowCXFlowEventHandlers(d.Get("event_handlers"), d, config)
+	eventHandlersProp, err := expandDialogflowCXEventHandlers(d.Get("event_handlers"), d, config)
 	if err != nil {
 		return err
 	} else if v, ok := d.GetOkExists("event_handlers"); !isEmptyValue(reflect.ValueOf(v)) && (ok || !reflect.DeepEqual(v, eventHandlersProp)) {
@@ -629,44 +629,6 @@ func flattenDialogflowCXFlowTransitionRoutesTargetFlow(v interface{}, d *schema.
 	return v
 }
 
-func flattenDialogflowCXFlowEventHandlers(v interface{}, d *schema.ResourceData, config *transport_tpg.Config) interface{} {
-	if v == nil {
-		return v
-	}
-	l := v.([]interface{})
-	transformed := make([]interface{}, 0, len(l))
-	for _, raw := range l {
-		original := raw.(map[string]interface{})
-		if len(original) < 1 {
-			// Do not include empty json objects coming back from the api
-			continue
-		}
-		transformed = append(transformed, map[string]interface{}{
-			"name":                flattenDialogflowCXFlowEventHandlersName(original["name"], d, config),
-			"event":               flattenDialogflowCXFlowEventHandlersEvent(original["event"], d, config),
-			"trigger_fulfillment": flattenDialogflowCXFulfillment(original["triggerFulfillment"], d, config),
-			"target_page":         flattenDialogflowCXFlowEventHandlersTargetPage(original["targetPage"], d, config),
-			"target_flow":         flattenDialogflowCXFlowEventHandlersTargetFlow(original["targetFlow"], d, config),
-		})
-	}
-	return transformed
-}
-func flattenDialogflowCXFlowEventHandlersName(v interface{}, d *schema.ResourceData, config *transport_tpg.Config) interface{} {
-	return v
-}
-
-func flattenDialogflowCXFlowEventHandlersEvent(v interface{}, d *schema.ResourceData, config *transport_tpg.Config) interface{} {
-	return v
-}
-
-func flattenDialogflowCXFlowEventHandlersTargetPage(v interface{}, d *schema.ResourceData, config *transport_tpg.Config) interface{} {
-	return v
-}
-
-func flattenDialogflowCXFlowEventHandlersTargetFlow(v interface{}, d *schema.ResourceData, config *transport_tpg.Config) interface{} {
-	return v
-}
-
 func flattenDialogflowCXFlowTransitionRouteGroups(v interface{}, d *schema.ResourceData, config *transport_tpg.Config) interface{} {
 	return v
 }
@@ -786,72 +748,6 @@ func expandDialogflowCXFlowTransitionRoutesTargetPage(v interface{}, d Terraform
 }
 
 func expandDialogflowCXFlowTransitionRoutesTargetFlow(v interface{}, d TerraformResourceData, config *transport_tpg.Config) (interface{}, error) {
-	return v, nil
-}
-
-func expandDialogflowCXFlowEventHandlers(v interface{}, d TerraformResourceData, config *transport_tpg.Config) (interface{}, error) {
-	l := v.([]interface{})
-	req := make([]interface{}, 0, len(l))
-	for _, raw := range l {
-		if raw == nil {
-			continue
-		}
-		original := raw.(map[string]interface{})
-		transformed := make(map[string]interface{})
-
-		transformedName, err := expandDialogflowCXFlowEventHandlersName(original["name"], d, config)
-		if err != nil {
-			return nil, err
-		} else if val := reflect.ValueOf(transformedName); val.IsValid() && !isEmptyValue(val) {
-			transformed["name"] = transformedName
-		}
-
-		transformedEvent, err := expandDialogflowCXFlowEventHandlersEvent(original["event"], d, config)
-		if err != nil {
-			return nil, err
-		} else if val := reflect.ValueOf(transformedEvent); val.IsValid() && !isEmptyValue(val) {
-			transformed["event"] = transformedEvent
-		}
-
-		transformedTriggerFulfillment, err := expandDialogflowCXFulfillment(original["trigger_fulfillment"], d, config)
-		if err != nil {
-			return nil, err
-		} else if val := reflect.ValueOf(transformedTriggerFulfillment); val.IsValid() && !isEmptyValue(val) {
-			transformed["triggerFulfillment"] = transformedTriggerFulfillment
-		}
-
-		transformedTargetPage, err := expandDialogflowCXFlowEventHandlersTargetPage(original["target_page"], d, config)
-		if err != nil {
-			return nil, err
-		} else if val := reflect.ValueOf(transformedTargetPage); val.IsValid() && !isEmptyValue(val) {
-			transformed["targetPage"] = transformedTargetPage
-		}
-
-		transformedTargetFlow, err := expandDialogflowCXFlowEventHandlersTargetFlow(original["target_flow"], d, config)
-		if err != nil {
-			return nil, err
-		} else if val := reflect.ValueOf(transformedTargetFlow); val.IsValid() && !isEmptyValue(val) {
-			transformed["targetFlow"] = transformedTargetFlow
-		}
-
-		req = append(req, transformed)
-	}
-	return req, nil
-}
-
-func expandDialogflowCXFlowEventHandlersName(v interface{}, d TerraformResourceData, config *transport_tpg.Config) (interface{}, error) {
-	return v, nil
-}
-
-func expandDialogflowCXFlowEventHandlersEvent(v interface{}, d TerraformResourceData, config *transport_tpg.Config) (interface{}, error) {
-	return v, nil
-}
-
-func expandDialogflowCXFlowEventHandlersTargetPage(v interface{}, d TerraformResourceData, config *transport_tpg.Config) (interface{}, error) {
-	return v, nil
-}
-
-func expandDialogflowCXFlowEventHandlersTargetFlow(v interface{}, d TerraformResourceData, config *transport_tpg.Config) (interface{}, error) {
 	return v, nil
 }
 
